@@ -14,6 +14,7 @@ class CountUntilServerNode(Node):
         super().__init__("count_until_server")
         self.goal_handle_: ServerGoalHandle = None
         self.goal_lock = threading.Lock()
+        # Policy 3: add new goals to queue and execute in sequence
         self.goal_queue_ = []
         self.count_until_server_ = ActionServer(
             self, 
@@ -30,7 +31,7 @@ class CountUntilServerNode(Node):
     def goal_callback(self, goal_request: CountUntil.Goal):
         self.get_logger().info("Received a goal")
         
-        # # Policy: refuse new goal if current goal is still active
+        # # Policy 1: refuse new goal if current goal is still active
         # if self.goal_handle_ is not None and self.goal_handle_.is_active:
         #     self.get_logger().info("A goal is already active, rejecting new goal")
         #     return GoalResponse.REJECT
@@ -40,7 +41,7 @@ class CountUntilServerNode(Node):
             self.get_logger().info("Rejecting the goal")
             return GoalResponse.REJECT
         
-        # # Policy: preempt existing goal when receiving new goal 
+        # # Policy 2: preempt existing goal when receiving new goal 
         # with self.goal_lock:
         #     if self.goal_handle_ is not None and self.goal_handle_.is_active:
         #         self.get_logger().info("Abort current goal and accept new goal")
@@ -77,6 +78,7 @@ class CountUntilServerNode(Node):
         for i in range(target_number):
             if not goal_handle.is_active:
                 result.reached_number = counter 
+                # Policy 3
                 self.process_next_goal_in_queue()
                 return result
             
@@ -84,6 +86,7 @@ class CountUntilServerNode(Node):
                 self.get_logger().info("Cancelling the goal")
                 goal_handle.canceled()
                 result.reached_number = counter 
+                # Policy 3
                 self.process_next_goal_in_queue()
                 return result
             counter += 1
@@ -97,9 +100,11 @@ class CountUntilServerNode(Node):
 
         # Send result
         result.reached_number = counter
+        # Policy 3
         self.process_next_goal_in_queue()
         return result
 
+    # Policy 3
     def process_next_goal_in_queue(self):
         with self.goal_lock:
             if len(self.goal_queue_) > 0:
