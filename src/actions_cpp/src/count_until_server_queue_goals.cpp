@@ -64,9 +64,10 @@ private:
         std::lock_guard<std::mutex> lock(mutex_);
         goal_queue_.push(goal_handle);
         RCLCPP_INFO(this->get_logger(), "Add goal to the queue");
-        RCLCPP_INFO(this->get_logger(), "Queue size: %d", (int)goal_queue_.size());
+        RCLCPP_INFO(this->get_logger(), "Current queue size: %d", (int)goal_queue_.size());
 
     }
+
 
     void run_goal_queue_thread()
     {
