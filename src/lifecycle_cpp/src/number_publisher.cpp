@@ -1,9 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
-#include "example_interfaces/msg/int64.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "example_interfaces/msg/int64.hpp"
 
-
-using LifecycleCallbackRetrun = 
+using LifecycleCallbackReturn =
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 class NumberPublisherNode : public rclcpp_lifecycle::LifecycleNode
@@ -13,11 +12,10 @@ public:
     {
         RCLCPP_INFO(this->get_logger(), "IN constructor");
         number_ = 1;
-        double publish_frequency_ = 1.0;
-
+        publish_frequency_ = 1.0;
     }
 
-    LifecycleCallbackRetrun on_configure(const rclcpp_lifecycle::State &previous_state)
+    LifecycleCallbackReturn on_configure(const rclcpp_lifecycle::State &previous_state)
     {
         (void)previous_state;
         RCLCPP_INFO(this->get_logger(), "IN on_configure");
@@ -27,50 +25,50 @@ public:
             this->create_wall_timer(std::chrono::milliseconds((int)(1000.0 / publish_frequency_)),
                                     std::bind(&NumberPublisherNode::publishNumber, this));
         number_timer_->cancel();
-        return LifecycleCallbackRetrun::SUCCESS;
+        return LifecycleCallbackReturn::SUCCESS;
     }
 
-    LifecycleCallbackRetrun on_cleanup(const rclcpp_lifecycle::State &previous_state)
+    LifecycleCallbackReturn on_activate(const rclcpp_lifecycle::State &previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "IN on_activate");
+        number_timer_->reset();
+        rclcpp_lifecycle::LifecycleNode::on_activate(previous_state);
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    LifecycleCallbackReturn on_deactivate(const rclcpp_lifecycle::State &previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "IN on_deactivate");
+        number_timer_->cancel();
+        rclcpp_lifecycle::LifecycleNode::on_deactivate(previous_state);
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    LifecycleCallbackReturn on_cleanup(const rclcpp_lifecycle::State &previous_state)
     {
         (void)previous_state;
         RCLCPP_INFO(this->get_logger(), "IN on_cleanup");
         number_publisher_.reset();
         number_timer_.reset();
-        return LifecycleCallbackRetrun::SUCCESS;
+        return LifecycleCallbackReturn::SUCCESS;
     }
 
-    LifecycleCallbackRetrun on_activate(const rclcpp_lifecycle::State &previous_state)
-    {
-        RCLCPP_INFO(this->get_logger(), "IN on_activate");
-        number_timer_->reset();
-        rclcpp_lifecycle::LifecycleNode::on_activate(previous_state);
-        return LifecycleCallbackRetrun::SUCCESS;
-    }
-
-    LifecycleCallbackRetrun on_deactivate(const rclcpp_lifecycle::State &previous_state)
-    {
-        RCLCPP_INFO(this->get_logger(), "IN on_deactivate");
-        number_timer_->cancel();
-        rclcpp_lifecycle::LifecycleNode::on_deactivate(previous_state);
-        return LifecycleCallbackRetrun::SUCCESS;
-    }
-
-    LifecycleCallbackRetrun on_shutdown(const rclcpp_lifecycle::State &previous_state)
+    LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &previous_state)
     {
         (void)previous_state;
         RCLCPP_INFO(this->get_logger(), "IN on_shutdown");
         number_publisher_.reset();
         number_timer_.reset();
-        return LifecycleCallbackRetrun::SUCCESS;
+        return LifecycleCallbackReturn::SUCCESS;
     }
 
-    LifecycleCallbackRetrun on_error(const rclcpp_lifecycle::State &previous_state)
+    LifecycleCallbackReturn on_error(const rclcpp_lifecycle::State &previous_state)
     {
         (void)previous_state;
-        RCLCPP_INFO(this->get_logger(), "IN on_shutdown");
+        RCLCPP_INFO(this->get_logger(), "IN on_error");
         number_publisher_.reset();
         number_timer_.reset();
-        return LifecycleCallbackRetrun::FAILURE;
+        return LifecycleCallbackReturn::FAILURE;
     }
 
 private:
